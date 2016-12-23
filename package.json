@@ -1,6 +1,8 @@
 {
     "name": "example-webpack",
     "devDependencies": {
-        "i18n-webpack-plugin": "0.3.0"
-    }
+        "webpack": "1.14.0",
+        "i18n-webpack-plugin": "0.3.0",
+        "string-replace-webpack-plugin": "0.0.4"
+    }   
 }

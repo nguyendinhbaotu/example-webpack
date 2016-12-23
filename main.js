@@ -1,4 +1,2 @@
-// console.log(__("Hello World"));
-// console.log(__("Missing Text"));
-
-<div>${_("Hello World")}</div>
+console.log(__("HelloWorld"));
+console.log(__("MissingText"));
