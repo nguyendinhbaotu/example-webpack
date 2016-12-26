@@ -1,45 +1,46 @@
 var path = require("path");
-var I18nPlugin = require("i18n-webpack-plugin");
-var StringReplacePlugin = require("string-replace-webpack-plugin");
-var languages = {
-    "en": require("./en.json"),
-    "de": require("./de.json")
-}
-var selectedLanguage = languages["de"];
-console.log(selectedLanguage);
+var HtmlWebpackPlugin = require('html-webpack-plugin');
+var AwesomeTypescriptLoader = require('awesome-typescript-loader')
 module.exports = {
     entry: {
-        // index: "./index.html",
-        main: "./main.js"
+        'index': './src/index.ts',
+        'de_DE/i18n': './i18n/de_DE.js',
+        'en_US/i18n': './i18n/en_US.js'
     },
     output: {
         filename: "[name].js",
-        path: __dirname + "/bundled",
-        publicPath: "/bundled/"
+        path: __dirname + "/dist",
+        publicPath: "/dist/"
     },
+    // resolve: {
+    //     extensions: ['.css', '.ts', '.tsx', '.js', '.jsx']
+    // },
     module: {
         loaders: [
-            { test: /\.html$/, loader: "file?name=[path][name].[ext]" }, // copies the files over
-            // configure replacements for file patterns
             {
-                test: /\.html$/,
-                loader: StringReplacePlugin.replace({
-                    replacements: [
-                        {
-                            pattern: /<!-- @lang (\w*?) -->/ig,
-                            replacement: function (match, p1, offset, string) {
-                                return selectedLanguage[p1];
-                                // return __(p1);
-                            }
-                        }
-                    ]
-                })
+                test: /\.css$/,
+                loaders: ["css-loader"]
             }
         ]
     },
     plugins: [
         // an instance of the plugin must be present
-        new StringReplacePlugin(),
-        new I18nPlugin(selectedLanguage)
+        new HtmlWebpackPlugin({
+            locale: 'de_DE',
+            filename: 'de_DE/index.html',
+            template: 'src/index.html',
+            chunks: ['de_DE/i18n', 'index'],
+            chunksSortMode: (a, b) => a.names[0] === 'index' ? 1 : 0
+        }),
+        new HtmlWebpackPlugin({
+            locale: 'en_US',
+            filename: 'en_US/index.html',
+            template: 'src/index.html',
+            chunks: ['en_US/i18n', 'index'],
+            chunksSortMode: (a, b) => a.names[0] === 'index' ? 1 : 0
+        }),
+    ],
+    externals: [
+        '@app/i18n'
     ]
 }
