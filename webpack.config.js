@@ -1,6 +1,28 @@
 var path = require("path");
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var AwesomeTypescriptLoader = require('awesome-typescript-loader')
+var AwesomeTypescriptLoader = require('awesome-typescript-loader');
+var fs = require('fs');
+var glob = require('glob');
+
+var src = 'src/';
+var realPath = fs.realpathSync(__dirname + '/' + src);
+var plugins = new Array();
+var locales = ['en_US'];
+var pages = glob.sync(src + '**/*.html');
+locales.map(locale => {
+    pages.map(page => {
+        plugins.push(new HtmlWebpackPlugin({
+            locale: locale,
+            filename: locale + '/' + page.replace(realPath, '').replace(src, ''),
+            template: page,
+            chunks: [locale + '/i18n', 'index'],
+            chunksSortMode: (a, b) => a.names[0] === 'index' ? 1 : 0
+        }));
+    });
+});
+// plugins.push(new AwesomeTypescriptLoader());
+
+console.log(plugins);
 module.exports = {
     entry: {
         'index': './src/index.ts',
@@ -12,35 +34,20 @@ module.exports = {
         path: __dirname + "/dist",
         publicPath: "/dist/"
     },
-    // resolve: {
-    //     extensions: ['.css', '.ts', '.tsx', '.js', '.jsx']
-    // },
+    devtool: 'source-map',
     module: {
         loaders: [
             {
-                test: /\.css$/,
-                loaders: ["css-loader"]
-            }
+                test: /\.ts$/,
+                loader: 'ts-loader'
+            },
+            { test: /\.css$/, loader: "style!css" }
         ]
     },
-    plugins: [
-        // an instance of the plugin must be present
-        new HtmlWebpackPlugin({
-            locale: 'de_DE',
-            filename: 'de_DE/index.html',
-            template: 'src/index.html',
-            chunks: ['de_DE/i18n', 'index'],
-            chunksSortMode: (a, b) => a.names[0] === 'index' ? 1 : 0
-        }),
-        new HtmlWebpackPlugin({
-            locale: 'en_US',
-            filename: 'en_US/index.html',
-            template: 'src/index.html',
-            chunks: ['en_US/i18n', 'index'],
-            chunksSortMode: (a, b) => a.names[0] === 'index' ? 1 : 0
-        }),
-    ],
+    plugins: plugins,
     externals: [
         '@app/i18n'
     ]
 }
+
+

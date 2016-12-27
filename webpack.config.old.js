@@ -10,7 +10,7 @@ console.log(selectedLanguage);
 module.exports = {
     entry: {
         // index: "./index.html",
-        main: "./main.js"
+        app: "./app.js"
     },
     output: {
         filename: "[name].js",
