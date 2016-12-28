@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "rimraf dist/ && webpack",
-    "serve": "http-server dist/"
+    "webpack-debug": "webpack --config ./webpack.debug.config.js",
+    "webpack-production": "webpack --config ./webpack.production.config.js"
   },
   "devDependencies": {
     "awesome-typescript-loader": "3.0.0-beta.17",
@@ -17,7 +17,11 @@
     "glob": "7.1.1",
     "html-webpack-plugin": "^2.24.1",
     "http-server": "^0.9.0",
+    "null-loader": "^0.1.1",
+    "postcss-loader": "^1.2.1",
+    "raw-loader": "^0.5.1",
     "rimraf": "^2.5.4",
+    "style-loader": "^0.13.1",
     "typescript": "^2.0.6",
     "webpack": "^2.1.0-beta.25"
   }

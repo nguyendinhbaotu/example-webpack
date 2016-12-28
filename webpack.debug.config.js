@@ -1,4 +1,3 @@
-var path = require('path');
 const join = require('path').join;
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -6,15 +5,10 @@ const ExtractTextWebpackPlugin = require('extract-text-webpack-plugin');
 
 const babelConfig = JSON.stringify({
   presets: [
-    ['babel-preset-es2015', { modules: false }]
+    [ 'babel-preset-es2015', { modules: false } ]
   ]
 });
 
-
-/**
- * Html Translation
- *
- */
 const fs = require('fs');
 const glob = require('glob');
 const src = 'src/';
@@ -23,18 +17,17 @@ var plugins = new Array();
 var locales = ['en_US', 'de_DE'];
 var pages = glob.sync(src + '**/*.html');
 locales.map(locale => {
-  pages.map(page => {
-    plugins.push(new HtmlWebpackPlugin({
-      locale: locale,
-      filename: locale + '/' + page.replace(realPath, '').replace(src, ''),
-      template: page,
-      chunks: [locale + '/i18n', 'index'],
-      chunksSortMode: (a, b) => a.names[0] === 'index' ? 1 : 0
-    }));
-  });
+    pages.map(page => {
+        plugins.push(new HtmlWebpackPlugin({
+            locale: locale,
+            filename: locale + '/' + page.replace(realPath, '').replace(src, ''),
+            template: page,
+            chunks: [locale + '/i18n', 'index'],
+            chunksSortMode: (a, b) => a.names[0] === 'index' ? 1 : 0
+        }));
+    });
 });
-plugins.push(new ExtractTextWebpackPlugin('[name].css'));
-
+plugins.push(new ExtractTextWebpackPlugin('style.css'));
 module.exports = {
   entry: {
     'index': './src/index.ts',
@@ -44,22 +37,22 @@ module.exports = {
   output: {
     libraryTarget: 'umd',
     filename: '[name].js',
-    path: join(process.cwd(), 'dist')
+    path: join(process.cwd(), 'debug')
   },
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx']
+    extensions: [ '.ts', '.tsx', '.js', '.jsx' ]
   },
   devtool: 'source-map',
   module: {
     loaders: [
       {
-        test: /\.ts$/,
-        loaders: ['awesome-typescript-loader'],
-        exclude: [/node_modules\/(?!(ng2-.+))/]
+        test: /\.ts(x?)$/,
+        loader: `babel-loader?${babelConfig}!awesome-typescript-loader`
       },
       {
-        test: /\.css$/, loader: "style-loader!css-loader"
-      },
+        test: /\.css$/,
+        loader: ExtractTextWebpackPlugin.extract('css-loader?sourceMap&context=/')
+      }
     ]
   },
   plugins: plugins,
@@ -67,10 +60,3 @@ module.exports = {
     '@foo/i18n'
   ]
 };
-
-
-// Helper functions
-function root(args) {
-  args = Array.prototype.slice.call(arguments, 0);
-  return path.join.apply(path, [__dirname].concat(args));
-}
