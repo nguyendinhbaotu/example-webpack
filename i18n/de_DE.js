@@ -1,4 +1,4 @@
-module.exports['@app/i18n'] = {
+module.exports['@foo/i18n'] = {
   foo: () => 'Hallo foo.',
   bar: () => 'Hallo bar.'
 };

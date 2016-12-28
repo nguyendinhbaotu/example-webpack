@@ -1,13 +1,20 @@
-var path = require("path");
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-var AwesomeTypescriptLoader = require('awesome-typescript-loader');
-var fs = require('fs');
-var glob = require('glob');
+const join = require('path').join;
+const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ExtractTextWebpackPlugin = require('extract-text-webpack-plugin');
 
-var src = 'src/';
-var realPath = fs.realpathSync(__dirname + '/' + src);
+const babelConfig = JSON.stringify({
+  presets: [
+    [ 'babel-preset-es2015', { modules: false } ]
+  ]
+});
+
+const fs = require('fs');
+const glob = require('glob');
+const src = 'src/';
+const realPath = fs.realpathSync(__dirname + '/' + src);
 var plugins = new Array();
-var locales = ['en_US'];
+var locales = ['en_US', 'de_DE'];
 var pages = glob.sync(src + '**/*.html');
 locales.map(locale => {
     pages.map(page => {
@@ -20,34 +27,36 @@ locales.map(locale => {
         }));
     });
 });
-// plugins.push(new AwesomeTypescriptLoader());
-
-console.log(plugins);
+plugins.push(new ExtractTextWebpackPlugin('style.css'));
 module.exports = {
-    entry: {
-        'index': './src/index.ts',
-        'de_DE/i18n': './i18n/de_DE.js',
-        'en_US/i18n': './i18n/en_US.js'
-    },
-    output: {
-        filename: "[name].js",
-        path: __dirname + "/dist",
-        publicPath: "/dist/"
-    },
-    devtool: 'source-map',
-    module: {
-        loaders: [
-            {
-                test: /\.ts$/,
-                loader: 'ts-loader'
-            },
-            { test: /\.css$/, loader: "style!css" }
-        ]
-    },
-    plugins: plugins,
-    externals: [
-        '@app/i18n'
+  entry: {
+    'index': './src/index.ts',
+    'de_DE/i18n': './i18n/de_DE.js',
+    'en_US/i18n': './i18n/en_US.js'
+  },
+  output: {
+    libraryTarget: 'umd',
+    filename: '[name].js',
+    path: join(process.cwd(), 'dist')
+  },
+  resolve: {
+    extensions: [ '.ts', '.tsx', '.js', '.jsx' ]
+  },
+  devtool: 'source-map',
+  module: {
+    loaders: [
+      {
+        test: /\.ts(x?)$/,
+        loader: `babel-loader?${babelConfig}!awesome-typescript-loader`
+      },
+      {
+        test: /\.css$/,
+        loader: ExtractTextWebpackPlugin.extract('css-loader?sourceMap&context=/')
+      }
     ]
-}
-
-
+  },
+  plugins: plugins,
+  externals: [
+    '@foo/i18n'
+  ]
+};

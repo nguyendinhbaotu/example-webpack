@@ -1,4 +1,4 @@
-declare module '@app/i18n' {
+declare module '@foo/i18n' {
   /**
    * Available translations:
    * - `de_DE`: Hallo foo.
