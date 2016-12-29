@@ -1,20 +1,21 @@
+require('css-loader');
+require('style-loader');
 var path = require('path');
 const join = require('path').join;
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ExtractTextWebpackPlugin = require('extract-text-webpack-plugin');
-
 const babelConfig = JSON.stringify({
   presets: [
     ['babel-preset-es2015', { modules: false }]
   ]
 });
 
-
 /**
  * Html Translation
  *
  */
+// const en = require('./src/i18n/en.json');
+// console.log(en);
 const fs = require('fs');
 const glob = require('glob');
 const src = 'src/';
@@ -28,37 +29,42 @@ locales.map(locale => {
       locale: locale,
       filename: locale + '/' + page.replace(realPath, '').replace(src, ''),
       template: page,
-      chunks: [locale + '/i18n', 'index'],
-      chunksSortMode: (a, b) => a.names[0] === 'index' ? 1 : 0
+      chunks: ['i18n/' + locale, 'app'],
+      chunksSortMode: (a, b) => a.names[0] === 'app' ? 1 : 0
     }));
   });
 });
-plugins.push(new ExtractTextWebpackPlugin('[name].css'));
-
 module.exports = {
   entry: {
-    'index': './src/index.ts',
-    'de_DE/i18n': './i18n/de_DE.js',
-    'en_US/i18n': './i18n/en_US.js'
+    'app': './src/app.ts',
+    'i18n/de_DE': './i18n/de_DE.js',
+    'i18n/en_US': './i18n/en_US.js',
   },
   output: {
     libraryTarget: 'umd',
-    filename: '[name].js',
-    path: join(process.cwd(), 'dist')
+    filename: 'js/[name].js',
+    path: root('dist')
   },
-  resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx']
-  },
-  devtool: 'source-map',
   module: {
     loaders: [
       {
-        test: /\.ts$/,
-        loaders: ['awesome-typescript-loader'],
-        exclude: [/node_modules\/(?!(ng2-.+))/]
+        test: /\.(jpg|png)$/,
+        use: 'url-loader?limit=100000',
+        exclude: [/(node_modules)/],
+        include: root('src', 'images')
       },
       {
-        test: /\.css$/, loader: "style-loader!css-loader"
+        test: /\.js$/,
+        loaders: [`babel-loader?${babelConfig}`],
+        exclude: [/(node_modules)/]
+      },
+      {
+        test: /\.ts$/,
+        loaders: [`babel-loader?${babelConfig}`, `awesome-typescript-loader`],
+        exclude: [/(node_modules)/]
+      },
+      {
+        test: /\.css$/, loaders: ['style-loader', 'css-loader']
       },
     ]
   },
@@ -67,7 +73,6 @@ module.exports = {
     '@foo/i18n'
   ]
 };
-
 
 // Helper functions
 function root(args) {
