@@ -30,6 +30,7 @@ const babelConfig = JSON.stringify({
  */
 const src = './src/';
 const i18n = `${src}i18n/`;
+const dist = '/dist/';
 const fs = require('fs');
 const glob = require('glob');
 var resourceNames = glob.sync(`${i18n}*.json`);
@@ -57,14 +58,13 @@ resources.forEach(function (resource) {
       chunksSortMode: (a, b) => a.names[0] === 'app' ? 1 : 0
     });
   });
-  plugins.push(
-    new I18nPlugin(resource.data),
-    new StringReplacePlugin());
+  plugins.push(new I18nPlugin(resource.data));
+  plugins.push(new StringReplacePlugin());
 
   configs.push({
     name: resource.name,
     entry: {
-      'app': './src/app.ts'
+      'app': `${src}app.ts`
     },
     output: {
       filename: '[name].js',
@@ -94,7 +94,7 @@ resources.forEach(function (resource) {
         },
         {
           test: /\.css$/, loaders: ['style-loader', 'css-loader']
-        },
+        }
       ]
     },
     plugins: plugins,
