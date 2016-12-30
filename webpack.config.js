@@ -1,9 +1,23 @@
 require('css-loader');
 require('style-loader');
-var path = require('path');
+require('raw-loader');
+
+const path = require('path');
 const join = require('path').join;
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const I18nPlugin = require("i18n-webpack-plugin");
+const StringReplacePlugin = require("string-replace-webpack-plugin");
+const StringReplacePluginLoader = StringReplacePlugin.replace({
+  replacements: [
+    {
+      pattern: /i18n.(\w*?)/ig,
+      replacement: function (match, p1, offset, string) {
+        return '';
+      }
+    }
+  ]
+});
 const babelConfig = JSON.stringify({
   presets: [
     ['babel-preset-es2015', { modules: false }]
@@ -14,68 +28,76 @@ const babelConfig = JSON.stringify({
  * Html Translation
  *
  */
-// const en = require('./src/i18n/en.json');
-// console.log(en);
+const src = './src/';
+const i18n = `${src}i18n/`;
 const fs = require('fs');
 const glob = require('glob');
-const src = 'src/';
-const realPath = fs.realpathSync(__dirname + '/' + src);
-var plugins = new Array();
-var locales = ['en_US', 'de_DE'];
+var resourceNames = glob.sync(`${i18n}*.json`);
+var resources = resourceNames.map(resourceName => {
+  return {
+    name: resourceName.replace(i18n, '').replace('.json', ''),
+    data: require(resourceName)
+  }
+})
 var pages = glob.sync(src + '**/*.html');
-locales.map(locale => {
-  pages.map(page => {
-    plugins.push(new HtmlWebpackPlugin({
-      locale: locale,
-      filename: locale + '/' + page.replace(realPath, '').replace(src, ''),
-      template: page,
-      chunks: ['i18n/' + locale, 'app'],
-      chunksSortMode: (a, b) => a.names[0] === 'app' ? 1 : 0
-    }));
-  });
-});
-module.exports = {
-  entry: {
-    'app': './src/app.ts',
-    'i18n/de_DE': './i18n/de_DE.js',
-    'i18n/en_US': './i18n/en_US.js',
-  },
-  output: {
-    libraryTarget: 'umd',
-    filename: 'js/[name].js',
-    path: root('dist')
-  },
-  module: {
-    loaders: [
-      {
-        test: /\.(jpg|png)$/,
-        use: 'url-loader?limit=100000',
-        exclude: [/(node_modules)/],
-        include: root('src', 'images')
-      },
-      {
-        test: /\.js$/,
-        loaders: [`babel-loader?${babelConfig}`],
-        exclude: [/(node_modules)/]
-      },
-      {
-        test: /\.ts$/,
-        loaders: [`babel-loader?${babelConfig}`, `awesome-typescript-loader`],
-        exclude: [/(node_modules)/]
-      },
-      {
-        test: /\.css$/, loaders: ['style-loader', 'css-loader']
-      },
-    ]
-  },
-  plugins: plugins,
-  externals: [
-    '@foo/i18n'
-  ]
-};
 
-// Helper functions
-function root(args) {
-  args = Array.prototype.slice.call(arguments, 0);
-  return path.join.apply(path, [__dirname].concat(args));
-}
+/**
+ * Configs
+ *
+ */
+var configs = [];
+resources.forEach(function (resource) {
+  var plugins = [];
+  plugins = pages.map(page => {
+    return new HtmlWebpackPlugin({
+      resource: resource,
+      filename: page.replace(src, ''),
+      template: page,
+      chunks: ['app'],
+      chunksSortMode: (a, b) => a.names[0] === 'app' ? 1 : 0
+    });
+  });
+  plugins.push(
+    new I18nPlugin(resource.data),
+    new StringReplacePlugin());
+
+  configs.push({
+    name: resource.name,
+    entry: {
+      'app': './src/app.ts'
+    },
+    output: {
+      filename: '[name].js',
+      path: path.join(__dirname, 'dist', resource.name),
+    },
+    module: {
+      loaders: [
+        {
+          test: /\.(jpg|png)$/,
+          use: 'url-loader?limit=100000',
+          exclude: [/(node_modules)/],
+          include: `${src}images`
+        },
+        {
+          test: /\.(svg)$/,
+          loader: 'raw-loader'
+        },
+        {
+          test: /\.js$/,
+          loaders: [`babel-loader?${babelConfig}`, StringReplacePluginLoader],
+          exclude: [/(node_modules)/]
+        },
+        {
+          test: /\.ts$/,
+          loaders: [`babel-loader?${babelConfig}`, StringReplacePluginLoader, `ts-loader`],
+          exclude: [/(node_modules)/]
+        },
+        {
+          test: /\.css$/, loaders: ['style-loader', 'css-loader']
+        },
+      ]
+    },
+    plugins: plugins,
+  })
+}, this);
+module.exports = configs;

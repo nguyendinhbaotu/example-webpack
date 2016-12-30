@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Test</title>
-  <% const i18n = require('../i18n/' + htmlWebpackPlugin.options.locale + '.js')['@foo/i18n'] %>
+  <% const resource = htmlWebpackPlugin.options.resource %>
 </head>
 <body>
-  <p>Your locale is: <%= htmlWebpackPlugin.options.locale %></p>
-  <p>You should see "<%= i18n.foo() %>" in your browser console.</p>
+  <p>Your locale is: <%= resource.name %></p>
+  <p>You should see "<%= resource.data.foo %>" in your browser console.</p>
 </body>
 </html>
